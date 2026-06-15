@@ -1,13 +1,12 @@
 import os
-import asyncio
 import time
-import sys
 import re
-import json
+import json 
 import requests
 import trafilatura
 import webbrowser
 import httpx
+import sys
 
 from urllib.parse import parse_qs , urlparse
 from openai import OpenAI , RateLimitError
@@ -18,6 +17,7 @@ from mcp import ClientSession
 from mcp.client.auth import OAuthClientProvider , TokenStorage
 from mcp.client.streamable_http import streamable_http_client
 from mcp.shared.auth import OAuthClientInformationFull , OAuthClientMetadata , OAuthToken
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from textual.app import App,ComposeResult
 from textual.binding import Binding
@@ -109,7 +109,6 @@ def fetch_for_agent(url: str) -> str:
     return content
 
 def smart_fetch(url: str) -> str:
-    from urllib.parse import urlparse
     base = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
 
     try:
@@ -300,13 +299,17 @@ class FileTokenStorage(TokenStorage):
 # The MCP SDK calls redirect_handler with the auth URL, then callback_handler
 # once the user has authorized and the browser is redirected to localhost.
 
-async def open_browser(auth_url: str) -> None:
-    print(f"Opening browser for login...\nIf it doesn't open: {auth_url}\n")
-    webbrowser.open(auth_url)
+def make_open_browser(log_callback=None):
+    async def open_browser(auth_url: str) -> None:
+        if log_callback:
+            log_callback(f"Opening browser for login...\nIf it doesn't open: {auth_url}\n")
+        else:
+            print(f"Opening browser for login...\nIf it doesn't open: {auth_url}\n",file=sys.stderr)
+        webbrowser.open(auth_url)
+    return open_browser
 
 
 async def wait_for_callback(log_callback=None) -> tuple[str, str | None]:
-    from http.server import BaseHTTPRequestHandler, HTTPServer
 
     code = state = None
 
@@ -322,7 +325,7 @@ async def wait_for_callback(log_callback=None) -> tuple[str, str | None]:
             self.wfile.write(b"<h1>Authorized. You can close this tab.</h1>")
 
         def log_message(self, *args):
-            pass  # silence request logs\
+            pass  # silence request logs
 
     if log_callback:
         log_callback(f"Waiting for callback on {REDIRECT_URI} ...")
@@ -341,7 +344,7 @@ async def run_agent_with_mcp(user_message:str,messages:list[dict],log_callback=N
 
     auth=OAuthClientProvider(server_url=ALPHAXIV_MCP_URL,client_metadata=OAuthClientMetadata(client_name="ResearchBot Agent",
                             redirect_uris=[REDIRECT_URI],grant_types=["authorization_code","refresh_token"],response_types=["code"],
-                            scope="read"),storage=storage,redirect_handler=open_browser,callback_handler=wait_for_callback)
+                            scope="read"),storage=storage,redirect_handler=make_open_browser(log_callback),callback_handler=wait_for_callback)
     
     try:
         async with httpx.AsyncClient(auth=auth, follow_redirects=True, timeout=60) as http:
@@ -504,30 +507,51 @@ class AgentApp(App):
     TITLE = "🔬 ResearchBot"         
     SUB_TITLE = "AI Research Assistant"
     CSS = """
+    Screen {
+        background: $surface;
+    }
+
+    Header {
+        background: $primary;
+        text-style: bold;
+    }
+
     Horizontal {
         height: 1fr;
     }
+
     #chat-panel {
         width: 60%;
-        border: solid $primary;
+        border: round $primary;
+        border-title-color: $primary;
+        background: $panel;
+        padding: 0 1;
     }
+
     #tool-panel {
         width: 40%;
-        border: solid $warning;
+        border: round $warning;
+        background: $panel-darken-1;
+        padding: 0 1;
     }
+
     Input {
         dock: bottom;
         height: 3;
+        border: tall $accent;
+    }
+
+    Footer > .footer--key {
+        color: $accent;
+        text-style: bold;
     }
     """
 
-    BINDINGS = [
-        Binding("ctrl+l", "clear_chat_panel", "Clear Chat Panel", priority=True),
-        Binding("ctrl+t", "clear_tool_log", "Clear Tool Log", priority=True),
-        Binding("ctrl+k", "clear_history", "Clear History", priority=True),
-        Binding("ctrl+s", "save_chat", "Save Chat", priority=True),
-        Binding("f2", "quit_app", "Quit App", priority=True)
-    ]
+    BINDINGS = [Binding("ctrl+l", "clear_chat_panel", "Clear Chat Panel", priority=True),
+                Binding("ctrl+t", "clear_tool_log", "Clear Tool Log", priority=True),
+                Binding("ctrl+k", "clear_history", "Clear History", priority=True),
+                Binding("ctrl+s", "save_chat", "Save Chat", priority=True),
+                Binding("f2", "quit_app", "Quit App", priority=True)]
 
     def __init__(self):
         super().__init__()

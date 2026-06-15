@@ -1,101 +1,119 @@
-# **Research Agent Project Description:**
+# **Research Agent Project Description**
+
+# 
+
+### ***Objective:***
+
+###### Building a TUI research agent that chains web search, page fetching, and academic paper search (via AlphaXiv MCP) to answer research questions it couldn't answer alone.
+
+# 
+
+### ***Foundation:***
+
+###### I worked through build1.py, build2.py, and build3.py — progressing from a hand-rolled tool-calling format, to the OpenAI SDK's native tool calling, and finally to wrapping the agent in a Textual TUI.
+
+# 
+
+## ***Project:***
+
+# 
+
+##### ***Extra Dependencies and Agent Setup:***
 
 
 
-#### ***Objective*** : Building a TUI research agent that chains web search, page fetching, and academic paper search (via AlphaXiv MCP) to answer research questions it couldn't answer alone.
-
-
-
-##### ***Foundation*** : 
-
-###### I focussed on building build1.py,build2.py and build3.py , understood each part of it ,progressing from working without OpenAI SDK tools to working with it and finally learning how to work with TUI to give my project an app-like look.
-
-
-
-### ***Project:***
-
-
-
-###### *API Key Hygiene :*
+###### To complete this project, I installed several dependencies:
 
 ###### 
 
-1. OpenAI API key as well as Serper API key are stored in a .env file and loaded using python-dotenv.
-
-2\. The .env file is listed in .gitignore to prevent accidental commits to GitHub.
-
-
-
-###### *Extra dependencies and agent setup:*
-
-
-
-To complete this week's project I had to install several dependencies like:
-
-* requests
-* markdownify
-* trafilatura
-* textual
-* mcp
-* httpx
+* ###### requests
+* ###### &#x20;httpx
+* ###### markdownify
+* ###### trafilatura
+* ###### textual
+* ###### mcp
 
 
 
-Agent setup:
+
+
+###### **Agent Setup:**
+
+###### 
+
+* ###### I logged into AlphaXiv to obtain authentication. The AlphaXiv MCP connection uses OAuth 2.0. During the first run, a browser opens for Google login, and the generated access and refresh tokens are stored locally in `.alphaxiv\_tokens.json`, allowing future runs without re-authentication.
+* ###### I also signed up for Serper, obtained an API key, and stored it in the `.env` file.
+
+# 
+
+##### ***What I Have Built and How It Works:***
 
 
 
-* I had to login into AlphaXiv for the first time to get authentication.The AlphaXiv MCP connection uses OAuth 2.0 — on first run, a browser opens for Google login, and the resulting access/refresh tokens are saved locally (.alphaxiv\_tokens.json) so future runs don't require re-authentication.
+###### I built an AI Research Assistant that receives user queries through a Textual TUI and either responds directly or uses tools when required. The assistant has access to three tools:
 
+###### 
 
+* ###### web\_search (Serper API)
+* ###### smart\_fetch (checks for `llms.txt` before falling back to content extraction using trafilatura and markdownify)
+* ###### discover\_papers from AlphaXiv through MCP
 
-* I also signed in at Serper to get my Serper API key and stored it in .env.
+###### 
 
+###### A chatbot function handles general conversations.
 
+###### 
 
-###### *What have I built and how it works:*
+###### The workflow starts when the user enters a query in the UI. The query is passed to a smart router that determines whether it is a research query, web query, or general query. Based on the classification, the appropriate agent function is called, and the detected query type is logged in the tool panel.
 
+###### 
 
+###### The selected agent then sends the query to the AI model, which may return tool calls. These tools are executed one by one, their outputs are combined, and the final response is shown in the chat panel. Responses are also stored in conversation history so the model can reference previous interactions. Tool calls are stored as well, allowing future context-aware responses.
 
-I have built an AI Research Assistant which receives the query through the TUI, parses it to a smart router, which decides whether it is a research query, a web query or a general query. Accordingly, it calls the specific function and prints the type of query detected in the tool log. Then the specific function calls the AI model with that query and receives some tool calls from the model. Then the tools are called one-by-one and together they construct the output and send it back to the chat-panel as well as stored in a list for the model's future reference. All the tool calls are also stored in the same list for the model's future reference. There are some bindings available in my TUI, namely:
+###### 
 
-* Clear Chat Panel
-* Clear Tool Log
-* Clear History
-* Save Chat
-* Quit
+###### The TUI provides the following functions:
 
-All these functions are invoked through specific key bindings mentioned in the TUI itself.
+###### 
 
+* ###### Clear Chat Panel
+* ###### Clear Tool Log
+* ###### Clear History
+* ###### Save Chat
+* ###### Quit
 
+###### 
 
-###### *Design Decision:*
+###### All functions can be accessed through dedicated key bindings displayed within the interface.
 
+###### 
 
+##### ***Design Decisions:***
 
-* I created a run\_smart\_router() function which takes the query and tests whether it is a research query, web search query or general query and calls the specific agent function accordingly. This was done to separate the types of queries and agent calls and make a clean design.
-* I created a fallback to web tools which works in case MCP agent fails. The web agent function gets called automatically which handles the task.
-* If a URL doesn't exist and the model is asked to fetch that, the error message is returned by the agent function to the model which calmly tells the user that the URL doesn't exist.
+###### 
 
+* ###### I created a `run\_smart\_router()` function that determines whether a query is research-related, web-related, or general, and routes it to the appropriate agent. This separation keeps the design modular and easier to maintain.
+* ###### I implemented a fallback mechanism so that if the MCP agent fails, the web agent is automatically invoked to continue handling the request.
+* ###### When a user requests content from a non-existent URL, the corresponding error is returned to the model, which then communicates the issue gracefully.
+* ###### Tool calls, routing decisions, and errors are sent to the tool-activity panel through a `log\_callback` function, keeping the chat panel focused on the conversation itself.
 
+###### 
 
-###### *Something that surprised me:*
+##### ***Something That Surprised Me:***
 
+###### 
 
+###### While implementing key bindings, I noticed that combinations such as CTRL+Q and CTRL+D were not working. After investigating, I discovered that the terminal was intercepting these shortcuts before they reached the Textual application. Through experimentation, I identified a set of key bindings that worked reliably and used them in the final version. I also added the `priority` argument to all bindings so that they are handled by the UI before the terminal can capture them.
 
-When I tried key bindings like CTRL+Q,CTRL+D etc. for different functions, they weren't working. When I deep-dived into it, I found that they were being swallowed by the terminal itself before reaching the UI. Then I did trial and error several times and finally got a set of key bindings which were working fine and used them in my final submission. Also, I added a priority argument in all my bindings so that they will be sent directly to the UI instead of getting captured by the terminal.
+###### 
 
+##### ***Areas for Improvement:***
 
+###### 
 
-###### *Areas for Improvements:*
+* ###### With more time, I would improve the UI, adding more features and making it look more polished.
+* ###### I would strengthen error handling and add model fallback capabilities so the system can switch to another model if one becomes unavailable.
+* ###### I would also implement streaming responses, allowing users to see output appear token-by-token instead of waiting for the complete response.
 
-
-
-Given more time, I would improve the UI of my project, enhancing its features and giving it a more refined and sophisticated look.
-
-Also, I would improvise the error handling part of my project, adding new features like model fallback, in case one model is not working properly.
-
-
-
-&#x20;
+###### 
 
