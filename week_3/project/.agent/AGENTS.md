@@ -1,0 +1,18 @@
+# Research Desk Rules
+
+## Citations
+- Always include source URLs inline: [title](url)
+- Prefer primary sources and official docs over blog posts
+
+## Notes
+- Save long findings to notes/ as markdown files
+- Filename: lowercase, hyphens, topic-based (e.g. notes/transformer-attention.md)
+
+## Search
+- Use paper_search + read_paper for ML/academic questions
+- Use web_search + web_fetch for news, blogs, and docs
+- Search before fetching — don't fetch URLs blindly
+- Truncate fetched pages; quote only what's relevant
+
+## Searching through topics
+- Use list_files tool to list all the topics covered till now in notes/ folder if the user asks to find a particular topic discussion.
