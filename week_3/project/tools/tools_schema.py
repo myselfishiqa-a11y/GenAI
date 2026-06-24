@@ -110,6 +110,20 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "web_fetch",   
+            "description": "Fetch and read the content of a webpage by URL.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "description": "URL to fetch"},
+                },
+                "required": ["url"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "paper_search",
             "description":  "Search for machine learning and computer science papers. "
                             "Use this first when the user asks about research papers.",

@@ -109,21 +109,19 @@ class Session:
                 try:
                     title_prompt = (f"Here is a conversation:\n\n{content}\n\n""Generate a concise 5-word title that summarizes what this "
                                         "conversation is about. Reply with ONLY the title text — ""no quotes, no explanation, no extra words.")
-                    response = client.chat.completions.create(messages=[{"role": "user", "content": title_prompt}],model=MODEL)
-                    print("DEBUG raw response:", repr(response.choices[0].message.content))   # <- yeh line add karo
+                    response = client.chat.completions.create(messages=[{"role": "user", "content": title_prompt}],model=MODEL) 
                     self.title = response.choices[0].message.content.strip()
-                except Exception as e:
-                    print("DEBUG exception:", e)   # <- yeh bhi add karo
+                except Exception as e: 
                     self.title = title
         else:
             self.title = title
         
-            self.messages=messages
-            self.updated_at=datetime.now().isoformat(timespec="seconds")
-            ses_dict={"id": self.id,"title": self.title,"created_at": self.created_at,"updated_at": self.updated_at,"messages": self.messages}
-            FILENAME=SESSIONS_DIR+"/"+self.id+".json"
-            with open(FILENAME,"w") as handle:
-                json.dump(ses_dict,handle)
+        self.messages=messages
+        self.updated_at=datetime.now().isoformat(timespec="seconds")
+        ses_dict={"id": self.id,"title": self.title,"created_at": self.created_at,"updated_at": self.updated_at,"messages": self.messages}
+        FILENAME=SESSIONS_DIR+"/"+self.id+".json"
+        with open(FILENAME,"w") as handle:
+            json.dump(ses_dict,handle)
 
     def load_session(self) -> dict:
         FILENAME=SESSIONS_DIR+"/"+self.id+".json"
@@ -195,7 +193,7 @@ class Agent:
             result = list_files(**args)
         elif name == "web_search":
             result = web_search(**args)
-        elif name == "smart_fetch":
+        elif (name == "smart_fetch" or name=="web_fetch"):
             result = smart_fetch(**args)
         elif name == "paper_search":
             result = paper_search(**args)
@@ -241,7 +239,7 @@ class REPLAgent(Agent):
 
             elif (user_input=="/list_sessions"):
                 for session in list_sessions():
-                    print (f"{session["id"]} : {session["title"]}")
+                    print (f"{session['id']} : {session['title']}")
             
             elif (user_input.startswith("/resume")):
                 session_id=user_input.split(" ")[-1]

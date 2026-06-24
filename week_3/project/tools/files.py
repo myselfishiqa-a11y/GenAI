@@ -151,9 +151,10 @@ def edit_file(path: str,operation: str,start_line: int,end_line: int | None = No
 
 def list_files(path: str = ".", pattern: str = "*") -> dict:
     try:
-        full_path=resolve_path(path)
+        full_path = resolve_path(path)
         full_pattern = os.path.join(full_path, pattern)
         matches = glob_module.glob(full_pattern)
-        return {"result": matches}
-    except Exception as e:
-        return {"error":str(e)}
+        relative_matches = [os.path.relpath(m, WORKSPACE_ROOT) for m in matches]
+        return {"result": relative_matches}
+    except ValueError as e:
+        return {"error": str(e)}
