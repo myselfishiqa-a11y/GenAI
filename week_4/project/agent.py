@@ -9,7 +9,7 @@ from datetime import datetime
 
 from tools.exec import run_command
 from tools.files import read_file,write_file,edit_file,list_files
-from tools.plan import TODO,TODOS_DATA
+from tools.plan import TODO
 from tools.search import grep,list_definitions
 from tools.tools_schema import TOOLS
 
@@ -59,7 +59,8 @@ BASE_PROMPT = """You are a coding agent. You have access to tools to read, searc
                 Always call mark_todo for every step — even if the test fails deliberately. The system will handle rejection. 
                 Never skip mark_todo.
                 For any step that involves writing a test, the verification command MUST be: python -m pytest <test_file> -v
-                Never use python -c import checks as verification for test steps.The pytest exit code must be 0 for mark_todo to accept the step."""
+                Never use python -c import checks as verification for test steps.The pytest exit code must be 0 for mark_todo to accept the
+                step."""
 
 
 TOOL_REGISTRY={"run_command":run_command,"grep":grep,"list_definitions":list_definitions,"read_file":read_file,"write_file":write_file,
